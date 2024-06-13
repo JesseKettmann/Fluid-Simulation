@@ -2,6 +2,7 @@
 #include "../Constants.h"
 #include "../Fluid/Fluid.h"
 #include "../Utility/Random.hpp"
+#include <CL/cl.hpp>
 
 
 class FluidSimulation final : public olc::PixelGameEngine
