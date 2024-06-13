@@ -8,13 +8,21 @@
 
 namespace
 {
-	static constexpr const int SCALE = 3;
-	static constexpr const int N = 160;
-	static constexpr const int ITERATIONS = 16;
 
-	static constexpr const float VESCOSITY = 0.0000001f; // thickness of fluid
-	static constexpr const float DIFFUSION = 0.0f;
-	static constexpr const float MOTION_SPEED = 0.2f;
+#define SCALE			3	
+#define N				160 // number of pixels
+#define ITERATIONS		16
+#define VISCOSITY		0.0000001f
+#define DIFFUSION		0.0f
+#define MOTION_SPEED	0.2f
+
+	//static constexpr const int SCALE = 3;
+	//static constexpr const int N = 160;
+	//static constexpr const int ITERATIONS = 16;
+
+	//static constexpr const float VESCOSITY = 0.0000001f; // thickness of fluid
+	//static constexpr const float DIFFUSION = 0.0f;
+	//static constexpr const float MOTION_SPEED = 0.2f;
 
 	/**
 	* Converts 2D coords into 1D ( x,y into index )

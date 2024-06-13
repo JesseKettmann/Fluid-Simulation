@@ -1089,17 +1089,17 @@ namespace detail {
  *  OpenCL C calls that require arrays of size_t values, whose
  *  size is known statically.
  */
-template <int N>
+template <int M>
 class size_t
 { 
 private:
-    ::size_t data_[N];
+    ::size_t data_[M];
 
 public:
     //! \brief Initialize size_t to all 0s
     size_t()
     {
-        for( int i = 0; i < N; ++i ) {
+        for( int i = 0; i < M; ++i ) {
             data_[i] = 0;
         }
     }
@@ -1226,8 +1226,8 @@ inline cl_int getInfoHelper(Func f, cl_uint name, STRING_CLASS* param, long)
 }
 
 // Specialized GetInfoHelper for cl::size_t params
-template <typename Func, ::size_t N>
-inline cl_int getInfoHelper(Func f, cl_uint name, size_t<N>* param, long)
+template <typename Func, ::size_t M>
+inline cl_int getInfoHelper(Func f, cl_uint name, size_t<M>* param, long)
 {
     ::size_t required;
     cl_int err = f(name, 0, NULL, &required);
@@ -1241,7 +1241,7 @@ inline cl_int getInfoHelper(Func f, cl_uint name, size_t<N>* param, long)
         return err;
     }
 
-    for(int i = 0; i < N; ++i) {
+    for(int i = 0; i < M; ++i) {
         (*param)[i] = value[i];
     }
 
