@@ -42,7 +42,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>NotSet</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -105,10 +105,12 @@
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <AdditionalIncludeDirectories>template;.;lib\glad;lib\glfw\include;lib\OpenCL\inc;lib\zlib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>lib/glfw/lib-vc2019;lib/zlib;lib/OpenCL/lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -161,18 +163,32 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="template\LICENSE" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\olcPixelGameEngine.cpp" />
     <ClCompile Include="Fluid\Fluid.cpp" />
     <ClCompile Include="FluidSimulation\FluidSimulation.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="template\opencl.cpp" />
+    <ClCompile Include="template\opengl.cpp" />
+    <ClCompile Include="template\sprite.cpp" />
+    <ClCompile Include="template\surface.cpp" />
+    <ClCompile Include="template\template.cpp" />
+    <ClCompile Include="template\tmpl8math.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
     <ClInclude Include="Engine\olcPixelGameEngine.h" />
     <ClInclude Include="Fluid\Fluid.h" />
     <ClInclude Include="FluidSimulation\FluidSimulation.h" />
+    <ClInclude Include="template\common.h" />
+    <ClInclude Include="template\opencl.h" />
+    <ClInclude Include="template\opengl.h" />
+    <ClInclude Include="template\precomp.h" />
+    <ClInclude Include="template\sprite.h" />
+    <ClInclude Include="template\surface.h" />
+    <ClInclude Include="template\tmpl8math.h" />
     <ClInclude Include="Utility\Random.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
