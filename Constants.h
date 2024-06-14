@@ -10,7 +10,7 @@ namespace
 {
 
 #define SCALE			3	
-#define N				160 // number of pixels
+#define N				160 // Width/height of screen
 #define ITERATIONS		16
 #define VISCOSITY		0.0000001f
 #define DIFFUSION		0.0f
