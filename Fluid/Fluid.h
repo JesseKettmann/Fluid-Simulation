@@ -1,5 +1,6 @@
 #pragma once
 #include "../Constants.h"
+#include <CL/cl.hpp>
 
 class Fluid
 {
@@ -89,6 +90,10 @@ private: // No stack over flow please OS!
 
 	 std::array<float, N * N> Vx0; // previous velocityX
 	 std::array<float, N * N> Vy0; // previous velocityY
+
+	 cl::Device device;
+	 cl::Context context;
+	 cl::Program program;
 
 public:
 	friend class FluidSimulation; // to access private members

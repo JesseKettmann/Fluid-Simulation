@@ -33,12 +33,7 @@ Fluid::Fluid()
 	memset(Vx0, 0, N * N);
 	memset(Vy0, 0, N * N);
 #endif
-}
 
-void Fluid::Update() noexcept
-{
-
-	//Test
 	std::vector<cl::Platform> platforms;
 	cl::Platform::get(&platforms);
 
@@ -46,29 +41,33 @@ void Fluid::Update() noexcept
 	std::vector<cl::Device> devices;
 	platform.getDevices(CL_DEVICE_TYPE_GPU, &devices); //maybe change to TYPE_ALL if necessary
 
-	auto device = devices.front();
+	device = devices.front();
 
-	std::ifstream helloWorldFile("program.cl");
-	std::string src(std::istreambuf_iterator<char>(helloWorldFile), (std::istreambuf_iterator<char>()));
+	std::ifstream programFile("program.cl");
+	std::string src(std::istreambuf_iterator<char>(programFile), (std::istreambuf_iterator<char>()));
 
 	cl::Program::Sources sources(1, std::make_pair(src.c_str(), src.length() + 1));
-	
-	cl::Context context(device);
-	cl::Program program(context, sources);
 
+	context = cl::Context(device);
+	program = cl::Program(context, sources);
 	auto err = program.build("-cl-std=CL1.2");
+	
+}
 
-	char buf[16];
-	int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8};
+void Fluid::Update() noexcept
+{
 
-	cl::Buffer memBuf(context, CL_MEM_READ_WRITE, sizeof(buf)); //Change read/write rights if necessary
-	cl::Buffer memNum(context, CL_MEM_READ_WRITE, sizeof(numbers), numbers); //Change read/write rights if necessary
-	cl::Kernel kernel(program, "HelloWorld", &err);
+	char buf[16] = { 0 };
+	int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	cl::Buffer memBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(buf), buf); //Change read/write rights if necessary
+	cl::Buffer memNum(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(numbers), numbers); //Change read/write rights if necessary
+	cl::Kernel kernel(program, "HelloWorld");
 	kernel.setArg(0, memBuf);
 	kernel.setArg(1, memNum);
 
 	cl::CommandQueue queue(context, device);
 	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(8));
+	queue.finish();
 	queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf);
 	queue.enqueueReadBuffer(memNum, CL_TRUE, 0, sizeof(numbers), numbers);
 
