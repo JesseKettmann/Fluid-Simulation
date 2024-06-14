@@ -177,6 +177,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Constants.h" />
+    <ClInclude Include="ConstantsExt.h" />
     <ClInclude Include="Engine\olcPixelGameEngine.h" />
     <ClInclude Include="Fluid\Fluid.h" />
     <ClInclude Include="FluidSimulation\FluidSimulation.h" />

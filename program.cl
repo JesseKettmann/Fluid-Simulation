@@ -16,12 +16,12 @@ __kernel void HelloWorld(__global char* data, __global int* number)
 
 	int i = get_global_id(0);
 	int num = number[i];
-	number[i] = N;
+	number[i] = num + 3;
 
 }
 
-//__kernel void LinearSolve(__global float* x, __global float* x0, float* a, float* cRecip)
-//{
-//	int i = get_global_id(0);
-//	x[i] = (x0[i] + a * (x[] + x[] + x[] + x[]))
-//}
+__kernel void LinearSolve(__global float* x, __global float* x0, float* a, float* cRecip)
+{
+	int i = get_global_id(0);
+	x[i] = (x0[i] + a * (x[i-1] + x[i+1] + x[i+N] + x[i-N])) * cRecip;
+}

@@ -57,27 +57,27 @@ Fluid::Fluid()
 void Fluid::Update() noexcept
 {
 
-	//char buf[16] = { 0 };
-	//int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
-	//cl::Buffer memBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(buf), buf); //Change read/write rights if necessary
-	//cl::Buffer memNum(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(numbers), numbers); //Change read/write rights if necessary
-	//cl::Kernel kernel(program, "HelloWorld");
-	//kernel.setArg(0, memBuf);
-	//kernel.setArg(1, memNum);
+	char buf[16] = { 0 };
+	int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	cl::Buffer memBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(buf), buf); //Change read/write rights if necessary
+	cl::Buffer memNum(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(numbers), numbers); //Change read/write rights if necessary
+	cl::Kernel kernel(program, "HelloWorld");
+	kernel.setArg(0, memBuf);
+	kernel.setArg(1, memNum);
 
-	//cl::CommandQueue queue(context, device);
-	//queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(8));
-	//queue.finish();
-	//queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf);
-	//queue.enqueueReadBuffer(memNum, CL_TRUE, 0, sizeof(numbers), numbers);
+	cl::CommandQueue queue(context, device);
+	queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(8));
+	queue.finish();
+	queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf);
+	queue.enqueueReadBuffer(memNum, CL_TRUE, 0, sizeof(numbers), numbers);
 
-	//int length = sizeof(numbers) / sizeof(int);
-	//for (int i = 0; i < length; i++)
-	//{
-	//	cout << numbers[i] << endl;
-	//}
-	//cout << buf << endl;
-	//std::cin.get();
+	int length = sizeof(numbers) / sizeof(int);
+	for (int i = 0; i < length; i++)
+	{
+		cout << numbers[i] << endl;
+	}
+	cout << buf << endl;
+	std::cin.get();
 
 	//End test
 

@@ -16,6 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="program.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\olcPixelGameEngine.cpp">
@@ -38,13 +39,19 @@
     <ClInclude Include="Utility\Random.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Constants.h">
+    <ClInclude Include="ConstantsExt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Fluid\Fluid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="FluidSimulation\FluidSimulation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="program.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
