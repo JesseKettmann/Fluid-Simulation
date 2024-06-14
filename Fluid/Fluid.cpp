@@ -133,6 +133,7 @@ void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
 							)) * cRecip;
 			}
 		}*/
+
 		cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t( N * N * 4), x);
 		cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t( N * N * 4), x0);
 		cl::Kernel kernel(program, "LinearSolve");
