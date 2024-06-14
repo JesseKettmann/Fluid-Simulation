@@ -82,8 +82,9 @@ public:
 	void Advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt) noexcept;
 
 private: // No stack over flow please OS!
-	 std::array<float, N * N> s;
-	 std::array<float, N * N> density;
+	 //std::array<float, N * N> s;
+	float s[N * N];
+	float density[N * N];
 
 	 std::array<float, N * N> Vx; // velocityX
 	 std::array<float, N * N> Vy; // velocityY

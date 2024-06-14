@@ -1,6 +1,6 @@
 #include "Fluid.h"
 #include <cmath>	// std::floor
-#include <CL/cl.hpp>
+#include <CL/cl.h>
 #include <fstream>
 #include <iostream>
 using namespace std;
@@ -50,7 +50,8 @@ Fluid::Fluid()
 
 	context = cl::Context(device);
 	program = cl::Program(context, sources);
-	auto err = program.build("-cl-std=CL1.2");
+	auto err = program.build();
+	if (err) cout << err << endl;
 	
 }
 
@@ -58,7 +59,7 @@ void Fluid::Update() noexcept
 {
 
 	//char buf[16] = { 0 };
-	//int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
+	//int numbers[] = { 1, 2, 3, 4, 5, 6, 7, 8, 1, 2, 3, 4, 5, 6, 7, 8, 9 };
 	//cl::Buffer memBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(buf), buf); //Change read/write rights if necessary
 	//cl::Buffer memNum(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(numbers), numbers); //Change read/write rights if necessary
 	//cl::Kernel kernel(program, "HelloWorld");
@@ -66,7 +67,7 @@ void Fluid::Update() noexcept
 	//kernel.setArg(1, memNum);
 
 	//cl::CommandQueue queue(context, device);
-	//queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(8));
+	//queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(17));
 	//queue.finish();
 	//queue.enqueueReadBuffer(memBuf, CL_TRUE, 0, sizeof(buf), buf);
 	//queue.enqueueReadBuffer(memNum, CL_TRUE, 0, sizeof(numbers), numbers);
@@ -91,8 +92,8 @@ void Fluid::Update() noexcept
 
 	Project(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
 
-	Diffuse(0, s.data(), density.data(), DIFFUSION, MOTION_SPEED);
-	Advect(0, density.data(), s.data(), Vx.data(), Vy.data(), MOTION_SPEED);
+	Diffuse(0, s, density, DIFFUSION, MOTION_SPEED);
+	Advect(0, density, s, Vx.data(), Vy.data(), MOTION_SPEED);
 }
 
 void Fluid::AddDensity(int x, int y, float amount) noexcept
@@ -132,9 +133,8 @@ void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
 							)) * cRecip;
 			}
 		}*/
-
-		cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(x), x);
-		cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(x0), x0);
+		cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t( N * N * 4), x);
+		cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t( N * N * 4), x0);
 		cl::Kernel kernel(program, "LinearSolve");
 		kernel.setArg(0, xBuf);
 		kernel.setArg(1, x0Buf);
@@ -143,13 +143,7 @@ void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
 
 		cl::CommandQueue queue(context, device);
 		queue.enqueueNDRangeKernel(kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
-		queue.finish();
-		queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, sizeof(x), x);
-		for (int i = 0; i < N * N; i++)
-		{
-			if (x[i] > 0) cout << i << endl;
-		}
-
+		queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
 
 		SetBoundary(b, x);
 	}

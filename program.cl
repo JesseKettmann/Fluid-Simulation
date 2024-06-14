@@ -16,14 +16,14 @@ __kernel void HelloWorld(__global char* data, __global int* number)
 
 	int i = get_global_id(0);
 	int num = number[i];
-	number[i] = num + 3;
+	number[i] = i;
 
 }
 
 __kernel void LinearSolve(__global float* x, __global float* x0, const float a, const float cRecip)
 {
 	int i = get_global_id(0);
-	//i = i + N + 1 + i / (N - 2) * 2;
-	//x[i] = (x0[i] + a * (x[i-1] + x[i+1] + x[i+N] + x[i-N])) * cRecip;
-	x[i] = 5000;
+	i = i + N + 1 + i / (N - 2) * 2;
+	x[i] = (x0[i] + a * (x[i-1] + x[i+1] + x[i+N] + x[i-N])) * cRecip;
+	//x[i] = i+1;
 }
