@@ -29,23 +29,19 @@ __kernel void LinearSolve(__global float* x, __global float* x0, const float a, 
 
 __kernel void SetBoundaryHorizontal(__global float* x, const int b) {
     int i = get_global_id(0);
-    if (i >= 1 && i < N - 1) {
-        x[i * N + 0] = b == 2 ? -x[i * N + 1] : x[i * N + 1];
-        x[i * N + (N - 1)] = b == 2 ? -x[i * N + (N - 2)] : x[i * N + (N - 2)];
-    }
+    x[i + 1] = b == 2 ? -x[i + 1 + N] : x[i + 1 + N];
+    x[N * N - i - 2] = b == 2 ? -x[N * (N - 1) - i - 2] : x[N * (N - 1) - i - 2];
 }
 
 __kernel void SetBoundaryVertical(__global float* x, const int b) {
     int j = get_global_id(0);
-    if (j >= 1 && j < N - 1) {
-        x[0 * N + j] = b == 1 ? -x[1 * N + j] : x[1 * N + j];
-        x[(N - 1) * N + j] = b == 1 ? -x[(N - 2) * N + j] : x[(N - 2) * N + j];
-    }
+    x[N * (j + 1)] = b == 1 ? -x[N * (j + 1) + 1] : x[N * (j + 1) + 1];
+    x[N * (j + 2) - 1] = b == 1 ? -x[N * (j + 2) - 2] : x[N * (j + 2) - 2];
 }
 
 __kernel void SetCorners(__global float* x) {
-    x[0 * N + 0] = 0.5f * (x[1 * N + 0] + x[0 * N + 1]);
-    x[0 * N + (N - 1)] = 0.5f * (x[1 * N + (N - 1)] + x[0 * N + (N - 2)]);
-    x[(N - 1) * N + 0] = 0.5f * (x[(N - 2) * N + 0] + x[(N - 1) * N + 1]);
-    x[(N - 1) * N + (N - 1)] = 0.5f * (x[(N - 2) * N + (N - 1)] + x[(N - 1) * N + (N - 2)]);
+    x[0] = 0.5f * (x[1] + x[N]);
+    x[N - 1] = 0.5f * (x[N - 2] + x[2 * N - 1]);
+    x[(N - 1) * N] = 0.5f * (x[(N - 1) * N + 1] + x[(N - 2) * N]);
+    x[N * N - 1] = 0.5f * (x[N * N - 2] + x[N * (N - 1)]);
 }
