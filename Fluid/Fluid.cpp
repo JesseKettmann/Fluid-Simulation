@@ -158,7 +158,7 @@ void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
 
 void Fluid::SetBoundary(int b, float* x) noexcept
 {
-	for (int i = 1; i < N - 1; i++)
+	/*for (int i = 1; i < N - 1; i++)
 	{
 		x[IX(i, 0)] = b == 2 ? -x[IX(i, 1)] : x[IX(i, 1)];
 		x[IX(i, N - 1)] = b == 2 ? -x[IX(i, N - 2)] : x[IX(i, N - 2)];
@@ -172,7 +172,7 @@ void Fluid::SetBoundary(int b, float* x) noexcept
 	x[IX(0, 0)] = 0.5f * (x[IX(1, 0)] + x[IX(0, 1)]);
 	x[IX(0, N - 1)] = 0.5f * (x[IX(1, N - 1)] + x[IX(0, N - 2)]);
 	x[IX(N - 1, 0)] = 0.5f * (x[IX(N - 2, 0)] + x[IX(N - 1, 1)]);
-	x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);
+	x[IX(N - 1, N - 1)] = 0.5f * (x[IX(N - 2, N - 1)] + x[IX(N - 1, N - 2)]);*/
 
 	// Create buffer and transfer data to device
 	cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x);
