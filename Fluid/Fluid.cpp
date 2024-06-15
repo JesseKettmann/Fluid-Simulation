@@ -95,8 +95,10 @@ void Fluid::Update() noexcept
 	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
 
 	// Read back results
+	queue.finish();
 	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
 	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.finish();
 
 	// Project and advect
 
