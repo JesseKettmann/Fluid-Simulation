@@ -62,7 +62,8 @@ public:
 	*	
 	*	This function also sets corners. This is done very simply, by setting each corner cell equal to the average of its three neighbors.
 	*/
-	void SetBoundary(int b, float* x) noexcept;
+	void SetBoundaryOld(int b, float* x) noexcept;
+	void SetBoundary(int b, cl::Buffer x) noexcept;
 
 	/**
 	*	This function is also somewhat mysterious as to exactly how it works,
