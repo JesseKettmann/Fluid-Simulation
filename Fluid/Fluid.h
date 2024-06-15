@@ -67,7 +67,7 @@ public:
 
 	/**
 	*	This function is also somewhat mysterious as to exactly how it works,
-	*	but it does some more running through the dataand setting values,
+	*	but it does some more running through the data and setting values,
 	*	with some calls to LinearSolve thrown in for fun.
 	*/
 	void Project(float* velocX, float* velocY, float* p, float* div) noexcept;
