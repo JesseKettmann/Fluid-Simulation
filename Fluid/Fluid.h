@@ -23,7 +23,7 @@ public:
 	*	So that means, while I know what it does, I don't really know how,
 	*	since all the work is in that mysterious function.
 	*/
-	void Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept;
+	void Diffuse(int b, cl::Buffer x, cl::Buffer x0, float diff, float dt) noexcept;
 
 	/**
 	*	this function is mysterious, but it does some kind of solving.
@@ -34,7 +34,7 @@ public:
 	*	four iterations are used. After each iteration, it resets the
 	*	boundaries so the calculations don't explode.
 	*/
-	void LinearSolve(int b, float* x, float* x0, float a, float c) noexcept;
+	void LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept;
 
 	/**
 	*	As noted above, this function sets the boundary cells at the outer edges of the this so they perfectly counteract their neighbors.
@@ -62,7 +62,8 @@ public:
 	*	
 	*	This function also sets corners. This is done very simply, by setting each corner cell equal to the average of its three neighbors.
 	*/
-	void SetBoundary(int b, float* x) noexcept;
+	void SetBoundaryOld(int b, float* x) noexcept;
+	void SetBoundary(int b, cl::Buffer x) noexcept;
 
 	/**
 	*	This function is also somewhat mysterious as to exactly how it works,
@@ -83,8 +84,8 @@ public:
 
 private: // No stack over flow please OS!
 	 //std::array<float, N * N> s;
-	float s[N * N];
-	float density[N * N];
+	 std::array<float, N* N> s;
+	 std::array<float, N* N> density;
 
 	 std::array<float, N * N> Vx; // velocityX
 	 std::array<float, N * N> Vy; // velocityY
@@ -95,7 +96,7 @@ private: // No stack over flow please OS!
 	 cl::Device device;
 	 cl::Context context;
 	 cl::Program program;
-
+	 cl::CommandQueue queue;
 public:
 	friend class FluidSimulation; // to access private members
 };
