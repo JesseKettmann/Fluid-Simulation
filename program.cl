@@ -26,3 +26,26 @@ __kernel void LinearSolve(__global float* x, __global float* x0, const float a, 
 	i = i + N + 1 + i / (N - 2) * 2;
 	x[i] = (x0[i] + a * (x[i-1] + x[i+1] + x[i+N] + x[i-N])) * cRecip;
 }
+
+__kernel void SetBoundaryHorizontal(__global float* x, const int b) {
+    int i = get_global_id(0);
+    if (i >= 1 && i < N - 1) {
+        x[i * N + 0] = b == 2 ? -x[i * N + 1] : x[i * N + 1];
+        x[i * N + (N - 1)] = b == 2 ? -x[i * N + (N - 2)] : x[i * N + (N - 2)];
+    }
+}
+
+__kernel void SetBoundaryVertical(__global float* x, const int b) {
+    int j = get_global_id(0);
+    if (j >= 1 && j < N - 1) {
+        x[0 * N + j] = b == 1 ? -x[1 * N + j] : x[1 * N + j];
+        x[(N - 1) * N + j] = b == 1 ? -x[(N - 2) * N + j] : x[(N - 2) * N + j];
+    }
+}
+
+__kernel void SetCorners(__global float* x) {
+    x[0 * N + 0] = 0.5f * (x[1 * N + 0] + x[0 * N + 1]);
+    x[0 * N + (N - 1)] = 0.5f * (x[1 * N + (N - 1)] + x[0 * N + (N - 2)]);
+    x[(N - 1) * N + 0] = 0.5f * (x[(N - 2) * N + 0] + x[(N - 1) * N + 1]);
+    x[(N - 1) * N + (N - 1)] = 0.5f * (x[(N - 2) * N + (N - 1)] + x[(N - 1) * N + (N - 2)]);
+}
