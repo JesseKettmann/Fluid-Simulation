@@ -216,13 +216,11 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
 #pragma endregion
 
-	
-
-
 	SetBoundaryOld(0, div);
 	SetBoundaryOld(0, p);
 	LinearSolve(0, p, div, 1, 4);
 
+	//TODO: Implement the following loop in the Project2 kernel
 	for (int j = 1; j < N - 1; j++) {
 		for (int i = 1; i < N - 1; i++) {
 			velocX[IX(i, j)] -= 0.5f * (p[IX(i + 1, j)]
