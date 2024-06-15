@@ -195,7 +195,7 @@ void Fluid::SetBoundary(int b, float* x) noexcept
 	cl::CommandQueue queue(context, device);
 	queue.enqueueNDRangeKernel(horizontalKernel, cl::NullRange, cl::NDRange(N - 2));
 	queue.enqueueNDRangeKernel(verticalKernel, cl::NullRange, cl::NDRange(N - 2));
-	queue.enqueueNDRangeKernel(cornerKernel, cl::NullRange, cl::NDRange(1));
+	queue.enqueueTask(cornerKernel);
 
 	// Read back results
 	queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
