@@ -96,6 +96,7 @@ private: // No stack over flow please OS!
 	 cl::Device device;
 	 cl::Context context;
 	 cl::Program program;
+	 cl::CommandQueue queue;
 
 public:
 	friend class FluidSimulation; // to access private members

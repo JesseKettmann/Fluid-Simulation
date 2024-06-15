@@ -79,8 +79,7 @@ void Fluid::Update() noexcept
 	//}
 	//cout << buf << endl;
 	
-
-	//End test
+	queue = cl::CommandQueue(context, device);
 
 	Diffuse(1, Vx0.data(), Vx.data(), VISCOSITY, MOTION_SPEED);
 	Diffuse(2, Vy0.data(), Vy.data(), VISCOSITY, MOTION_SPEED);
@@ -120,9 +119,6 @@ void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
 	// Create buffers and transfer data to device
 	cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x);
 	cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x0);
-
-	// Create command queue
-	cl::CommandQueue queue(context, device);
 	
 	const float cRecip = 1.0f / c;
 	for (int k = 0; k < ITERATIONS; k++)
@@ -179,8 +175,6 @@ void Fluid::SetBoundary(int b, cl::Buffer x) noexcept
 	cl::Kernel cornerKernel(program, "SetCorners");
 	cornerKernel.setArg(0, x);
 
-	// Create command queue and enqueue kernels
-	cl::CommandQueue queue(context, device);
 	queue.enqueueNDRangeKernel(horizontalKernel, cl::NullRange, cl::NDRange(N - 2));
 	queue.enqueueNDRangeKernel(verticalKernel, cl::NullRange, cl::NDRange(N - 2));
 	queue.enqueueTask(cornerKernel);
@@ -188,6 +182,7 @@ void Fluid::SetBoundary(int b, cl::Buffer x) noexcept
 
 void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 {
+	
 	for (int j = 1; j < N - 1; j++) {
 		for (int i = 1; i < N - 1; i++) {
 			div[IX(i, j)] = -0.5f * (
@@ -199,6 +194,7 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 			p[IX(i, j)] = 0;
 		}
 	}
+	//TODO: ^^^ change this to a gpu call to the kernel "Project1" ^^^
 
 	SetBoundaryOld(0, div);
 	SetBoundaryOld(0, p);
