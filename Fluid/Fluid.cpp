@@ -242,8 +242,8 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 		}
 	}
 
-	SetBoundary(0, div);
-	SetBoundary(0, p);
+	SetBoundaryOld(0, div);
+	SetBoundaryOld(0, p);
 	LinearSolve(0, p, div, 1, 4);
 
 	for (int j = 1; j < N - 1; j++) {
@@ -254,8 +254,8 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 				- p[IX(i, j - 1)]) * N;
 		}
 	}
-	SetBoundary(1, velocX);
-	SetBoundary(2, velocY);
+	SetBoundaryOld(1, velocX);
+	SetBoundaryOld(2, velocY);
 
 }
 
@@ -312,7 +312,7 @@ void Fluid::Advect(int b, float* d, float* d0, float* velocX, float* velocY, flo
 
 		}
 	}
-	SetBoundary(b, d);
+	SetBoundaryOld(b, d);
 }
 
 Fluid::~Fluid(){}
