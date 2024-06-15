@@ -94,6 +94,10 @@ void Fluid::Update() noexcept
 	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
 	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
 
+	// Read back results
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+
 	// Project and advect
 
 	Project(Vx0.data(), Vy0.data(), Vx, Vy);
@@ -113,8 +117,6 @@ void Fluid::Update() noexcept
 	Advect(0, density.data(), s.data(), Vx.data(), Vy.data(), MOTION_SPEED);
 
 	// Read back results
-	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
-	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
 	queue.enqueueReadBuffer(densityBuf, CL_TRUE, 0, size_t(N * N * 4), density.data());
 }
 
