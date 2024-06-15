@@ -70,7 +70,7 @@ public:
 	*	but it does some more running through the dataand setting values,
 	*	with some calls to LinearSolve thrown in for fun.
 	*/
-	void Project(float* velocX, float* velocY, float* p, float* div) noexcept;
+	void Project(float* velocX, float* velocY, std::array<float, N* N> p, std::array<float, N* N> div) noexcept;
 
 	/**
 	*	This function is responsible for actually moving things around.

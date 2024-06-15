@@ -96,12 +96,12 @@ void Fluid::Update() noexcept
 
 	// Project and advect
 
-	Project(Vx0.data(), Vy0.data(), Vx.data(), Vy.data());
+	Project(Vx0.data(), Vy0.data(), Vx, Vy);
 
 	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 
-	Project(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
+	Project(Vx.data(), Vy.data(), Vx0, Vy0);
 
 	// Diffuse density
 	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s.data());
@@ -228,7 +228,7 @@ void Fluid::SetBoundary(int b, cl::Buffer x) noexcept
 	queue.enqueueTask(cornerKernel);
 }
 
-void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
+void Fluid::Project(float* velocX, float* velocY, std::array<float, N* N> p, std::array<float, N* N> div) noexcept
 {
 	for (int j = 1; j < N - 1; j++) {
 		for (int i = 1; i < N - 1; i++) {
@@ -242,9 +242,13 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 		}
 	}
 
-	SetBoundaryOld(0, div);
-	SetBoundaryOld(0, p);
-	LinearSolve(0, p, div, 1, 4);
+	SetBoundaryOld(0, div.data());
+	SetBoundaryOld(0, p.data());
+	cl::Buffer pBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p.data());
+	cl::Buffer divBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div.data());
+	LinearSolve(0, pBuf, divBuf, 1, 4);
+	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div.data());
+
 
 	for (int j = 1; j < N - 1; j++) {
 		for (int i = 1; i < N - 1; i++) {
