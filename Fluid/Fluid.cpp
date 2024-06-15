@@ -100,12 +100,12 @@ void Fluid::Update() noexcept
 
 	// Project and advect
 
-	Project(Vx0.data(), Vy0.data(), Vx, Vy);
+	Project(Vx0.data(), Vy0.data(), Vx.data(), Vy.data());
 
 	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 
-	Project(Vx.data(), Vy.data(), Vx0, Vy0);
+	Project(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
 
 	// Diffuse density
 	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s.data());
