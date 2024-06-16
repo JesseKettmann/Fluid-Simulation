@@ -98,8 +98,6 @@ void Fluid::Update() noexcept
 	Diffuse(0, sBuf, densityBuf, DIFFUSION, MOTION_SPEED);
 	Advect(0, densityBuf, sBuf, VxBuf, VyBuf, MOTION_SPEED);
 
-	ClampDensity(densityBuf);
-
 	// Read back results
 	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
 	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
@@ -107,6 +105,8 @@ void Fluid::Update() noexcept
 	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 	queue.enqueueReadBuffer(sBuf, CL_TRUE, 0, size_t(N * N * 4), s);
 	queue.enqueueReadBuffer(densityBuf, CL_TRUE, 0, size_t(N * N * 4), density);
+
+	ClampDensity(densityBuf);
 
 	queue.finish();
 }
