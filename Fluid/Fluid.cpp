@@ -233,7 +233,7 @@ void Fluid::Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buff
 	SetBoundary(2, velocY);
 }
 
-void Fluid::Advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt) noexcept
+void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Buffer velocY, float dt) noexcept
 { 
 	float i0, i1, j0, j1;
 
@@ -290,24 +290,17 @@ void Fluid::Advect(int b, float* d, float* d0, float* velocX, float* velocY, flo
 	// Create and set arguments for the horizontal boundary kernel
 	cl::Kernel advectKernel(program, "Advect");
 
-	//Temp until hoisted
-	cl::Buffer dBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), d);
-	cl::Buffer d0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), d0);
-	cl::Buffer velocXBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocX);
-	cl::Buffer velocYBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocY);
-
 	advectKernel.setArg(0, sizeof(int), &b);
-	advectKernel.setArg(1, dBuf);
-	advectKernel.setArg(2, d0Buf);
-	advectKernel.setArg(3, velocXBuf);
-	advectKernel.setArg(4, velocYBuf);
+	advectKernel.setArg(1, d);
+	advectKernel.setArg(2, d0);
+	advectKernel.setArg(3, velocX);
+	advectKernel.setArg(4, velocY);
 	advectKernel.setArg(5, sizeof(float), &dtx);
 	advectKernel.setArg(6, sizeof(float), &dty);
 
 	queue.enqueueNDRangeKernel(advectKernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
-	queue.enqueueReadBuffer(dBuf, CL_TRUE, 0, size_t(N * N * 4), d);
 
-	SetBoundaryOld(b, d);
+	SetBoundary(b, d);
 }
 
 Fluid::~Fluid(){}
