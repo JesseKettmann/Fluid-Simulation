@@ -225,10 +225,6 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 
 	SetBoundary(0, divBuf);
 	SetBoundary(0, pBuf);
-
-	// Read back results
-	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
-	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
 #pragma endregion
 
 	LinearSolve(0, pBuf, divBuf, 1, 4);
@@ -269,7 +265,8 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	// Read back results
 	queue.enqueueReadBuffer(velocXBuf, CL_TRUE, 0, size_t(N * N * 4), velocX);
 	queue.enqueueReadBuffer(velocYBuf, CL_TRUE, 0, size_t(N * N * 4), velocY);
-
+	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
+	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
 }
 
 void Fluid::Advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt) noexcept
