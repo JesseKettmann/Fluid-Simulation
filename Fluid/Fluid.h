@@ -70,7 +70,6 @@ public:
 	*	but it does some more running through the data and setting values,
 	*	with some calls to LinearSolve thrown in for fun.
 	*/
-	void ProjectOld(float* velocX, float* velocY, float* p, float* div) noexcept;
 	void Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buffer div) noexcept;
 
 	/**
