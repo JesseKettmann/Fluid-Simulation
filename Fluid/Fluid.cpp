@@ -98,6 +98,8 @@ void Fluid::Update() noexcept
 	Diffuse(0, sBuf, densityBuf, DIFFUSION, MOTION_SPEED);
 	Advect(0, densityBuf, sBuf, VxBuf, VyBuf, MOTION_SPEED);
 
+	ClampDensity(densityBuf);
+
 	// Read back results
 	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
 	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
@@ -235,18 +237,8 @@ void Fluid::Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buff
 
 void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Buffer velocY, float dt) noexcept
 { 
-	float i0, i1, j0, j1;
-
 	const float dtx = dt * (N - 2);
 	const float dty = dt * (N - 2);
-
-	float s0, s1, t0, t1;
-	float tmp1, tmp2, x, y;
-
-	constexpr float Nfloat = static_cast<float>(N);
-	float ifloat, jfloat;
-	int i, j;
-
 
 	/*for (j = 1, jfloat = 1; j < N - 1; j++, jfloat++)
 	{
@@ -287,7 +279,7 @@ void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Bu
 		}
 	}*/
 
-	// Create and set arguments for the horizontal boundary kernel
+	// Create and set arguments
 	cl::Kernel advectKernel(program, "Advect");
 
 	advectKernel.setArg(0, sizeof(int), &b);
@@ -301,6 +293,16 @@ void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Bu
 	queue.enqueueNDRangeKernel(advectKernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
 	SetBoundary(b, d);
+}
+
+void Fluid::ClampDensity(cl::Buffer x) noexcept
+{
+	// Create and set arguments for the clamp kernel
+	cl::Kernel clampKernel(program, "Clamp");
+
+	clampKernel.setArg(0, x);
+
+	queue.enqueueNDRangeKernel(clampKernel, cl::NullRange, cl::NDRange(N * N));
 }
 
 Fluid::~Fluid(){}

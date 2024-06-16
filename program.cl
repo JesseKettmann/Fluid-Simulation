@@ -90,3 +90,9 @@ __kernel void Advect(const int b, __global float* d, __global float* d0, __globa
 		s1 * (t0 * d0[(i0 + 1) + j0 * N] + t1 * d0[(i0 + 1) + (j0 + 1) * N]);
 	
 }
+
+__kernel void Clamp(__global float* x)
+{
+	int i = get_global_id(0);
+	x[i] = clamp(x[i], 0, 255);
+}

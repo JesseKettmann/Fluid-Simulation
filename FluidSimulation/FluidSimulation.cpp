@@ -95,8 +95,8 @@ bool FluidSimulation::OnUserUpdate(float fElapsedTime)
 			// Get Density 0 -> 255 alpha (background color)
 			float& density = m_fluid->density[IX(i, j)];
 			
-			// Fix bug when color turn into black when adding too much density
-			density = std::clamp(density, 0.0f, 255.0f);
+			//// Fix bug when color turn into black when adding too much density
+			//density = std::clamp(density, 0.0f, 255.0f);
 
 			// Apply Fluid velocity
 			m_fluid->AddVelocity(x, y, m_velocity_x * fElapsedTime, m_velocity_y * fElapsedTime);
