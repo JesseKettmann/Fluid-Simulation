@@ -93,7 +93,13 @@ void Fluid::Update() noexcept
 	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
 	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 
-	Project(Vx0.data(), Vy0.data(), Vx.data(), Vy.data());
+	Project(Vx0Buf, Vy0Buf, VxBuf, VyBuf);
+
+	// Read back results
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 
 	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
@@ -192,33 +198,24 @@ void Fluid::SetBoundary(int b, cl::Buffer x) noexcept
 	queue.enqueueTask(cornerKernel);
 }
 
-void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
+void Fluid::Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buffer div) noexcept
 {
 
 #pragma region Project1_Kernelized
 	// Create and set arguments for the corner kernel
 	cl::Kernel project1Kernel(program, "Project1");
 
-	//Remove this later once buffers have been hoisted
-	cl::Buffer velocXBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocX);
-	cl::Buffer velocYBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocY);
-	cl::Buffer pBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p);
-	cl::Buffer divBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div);
-
-	project1Kernel.setArg(0, velocXBuf);
-	project1Kernel.setArg(1, velocYBuf);
-	project1Kernel.setArg(2, pBuf);
-	project1Kernel.setArg(3, divBuf);
+	project1Kernel.setArg(0, velocX);
+	project1Kernel.setArg(1, velocY);
+	project1Kernel.setArg(2, p);
+	project1Kernel.setArg(3, div);
 	queue.enqueueNDRangeKernel(project1Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
-	SetBoundary(0, divBuf);
-	SetBoundary(0, pBuf);
+	SetBoundary(0, div);
+	SetBoundary(0, p);
 #pragma endregion
 
-	LinearSolve(0, pBuf, divBuf, 1, 4);
-
-	// Read back results
-	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
+	LinearSolve(0, p, div, 1, 4);
 
 	//--Original code--:
 	/*for (int j = 1; j < N - 1; j++) {
@@ -234,27 +231,17 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	// Create and set arguments for the corner kernel
 	cl::Kernel project2Kernel(program, "Project2");
 
-	//Remove this later once buffers have been hoisted
-	pBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p);
-	divBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div);
-
-	project2Kernel.setArg(0, velocXBuf);
-	project2Kernel.setArg(1, velocYBuf);
-	project2Kernel.setArg(2, pBuf);
-	project2Kernel.setArg(3, divBuf);
+	project2Kernel.setArg(0, velocX);
+	project2Kernel.setArg(1, velocY);
+	project2Kernel.setArg(2, p);
+	project2Kernel.setArg(3, div);
 	queue.enqueueNDRangeKernel(project2Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
 	
 #pragma endregion
 
-	SetBoundary(1, velocXBuf);
-	SetBoundary(2, velocYBuf);
-
-	// Read back results
-	queue.enqueueReadBuffer(velocXBuf, CL_TRUE, 0, size_t(N * N * 4), velocX);
-	queue.enqueueReadBuffer(velocYBuf, CL_TRUE, 0, size_t(N * N * 4), velocY);
-	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
-	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
+	SetBoundary(1, velocX);
+	SetBoundary(2, velocY);
 }
 
 void Fluid::ProjectOld(float* velocX, float* velocY, float* p, float* div) noexcept
