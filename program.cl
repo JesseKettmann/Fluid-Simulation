@@ -91,8 +91,9 @@ __kernel void Advect(const int b, __global float* d, __global float* d0, __globa
 	
 }
 
-__kernel void Clamp(__global float* x)
+__kernel void ClampDensity(__global float* x)
 {
 	int i = get_global_id(0);
-	x[i] = clamp(x[i], 0, 255);
+	int prevX = x[i];
+	x[i] = clamp(prevX, 0, 255);
 }

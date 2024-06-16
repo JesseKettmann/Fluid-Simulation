@@ -298,7 +298,7 @@ void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Bu
 void Fluid::ClampDensity(cl::Buffer x) noexcept
 {
 	// Create and set arguments for the clamp kernel
-	cl::Kernel clampKernel(program, "Clamp");
+	cl::Kernel clampKernel(program, "ClampDensity");
 
 	clampKernel.setArg(0, x);
 
