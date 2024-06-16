@@ -23,7 +23,7 @@ public:
 	*	So that means, while I know what it does, I don't really know how,
 	*	since all the work is in that mysterious function.
 	*/
-	void Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept;
+	void Diffuse(int b, cl::Buffer x, cl::Buffer x0, float diff, float dt) noexcept;
 
 	/**
 	*	this function is mysterious, but it does some kind of solving.

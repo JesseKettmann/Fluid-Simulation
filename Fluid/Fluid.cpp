@@ -80,8 +80,18 @@ void Fluid::Update() noexcept
 	//}
 	//cout << buf << endl;
 
-	Diffuse(1, Vx0.data(), Vx.data(), VISCOSITY, MOTION_SPEED);
-	Diffuse(2, Vy0.data(), Vy.data(), VISCOSITY, MOTION_SPEED);
+	// Create buffers and transfer data to device
+	cl::Buffer VxBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vx.data());
+	cl::Buffer Vx0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vx0.data());
+	cl::Buffer VyBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy.data());
+	cl::Buffer Vy0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy0.data());
+
+	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
+	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
+
+	// Read back results
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 
 	Project(Vx0.data(), Vy0.data(), Vx.data(), Vy.data());
 
@@ -90,7 +100,15 @@ void Fluid::Update() noexcept
 
 	Project(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
 
-	Diffuse(0, s, density, DIFFUSION, MOTION_SPEED);
+	// Create buffers and transfer data to device
+	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s);
+	cl::Buffer densityBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), density);
+
+	Diffuse(0, sBuf, densityBuf, DIFFUSION, MOTION_SPEED);
+
+	// Read back results
+	queue.enqueueReadBuffer(sBuf, CL_TRUE, 0, size_t(N * N * 4), s);
+
 	Advect(0, density, s, Vx.data(), Vy.data(), MOTION_SPEED);
 
 	queue.finish();
@@ -109,17 +127,10 @@ void Fluid::AddVelocity(int x, int y, float amountX, float amountY) noexcept
 	this->Vy[index] += amountY;
 }
 
-void Fluid::Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept
+void Fluid::Diffuse(int b, cl::Buffer x, cl::Buffer x0, float diff, float dt) noexcept
 {
-	// Create buffers and transfer data to device
-	cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x);
-	cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x0);
-	
 	const float a = dt * diff * (N - 2) * (N - 2);
-	LinearSolve(b, xBuf, x0Buf, a, 1 + SCALE * a);
-
-	// Read back results
-	queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
+	LinearSolve(b, x, x0, a, 1 + SCALE * a);
 }
 
 void Fluid::LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept
