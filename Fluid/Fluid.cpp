@@ -100,6 +100,9 @@ void Fluid::Update() noexcept
 	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 
+	queue.enqueueWriteBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueWriteBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+
 	ProjectOld(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
 
 	// Create buffers and transfer data to device
