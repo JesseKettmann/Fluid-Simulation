@@ -61,3 +61,20 @@ __kernel void Project2(__global float* velocX, __global float* velocY, __global 
 	velocX[i] -= 0.5f * (p[i+1] - p[i-1]) * N;
 	velocY[i] -= 0.5f * (p[i+N] - p[i-N]) * N;
 }
+
+__kernel void Advect(const int b, __global float* d, __global float* d0, __global float* velocX, __global float* velocY, float dt)
+{
+	const float dtx = dt * (N - 2);
+	const float dty = dt * (N - 2);
+
+	int i = get_global_id(0);
+	i = i + N + 1 + i / (N - 2) * 2; //Skip all perimeter cells
+
+	float tmp1 = dtx * velocX[i];
+	float tmp2 = dty * velocY[i];
+
+	//I'm not sure how to continue want floats vs ints en drama
+	float x = 1234;
+	float y = 1234;
+
+}
