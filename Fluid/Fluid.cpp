@@ -220,17 +220,40 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	SetBoundaryOld(0, p);
 	LinearSolve(0, p, div, 1, 4);
 
-	//TODO: Implement the following loop in the Project2 kernel
-	for (int j = 1; j < N - 1; j++) {
+
+	//--Original code--:
+	/*for (int j = 1; j < N - 1; j++) {
 		for (int i = 1; i < N - 1; i++) {
 			velocX[IX(i, j)] -= 0.5f * (p[IX(i + 1, j)]
 				- p[IX(i - 1, j)]) * N;
 			velocY[IX(i, j)] -= 0.5f * (p[IX(i, j + 1)]
 				- p[IX(i, j - 1)]) * N;
 		}
-	}
-	SetBoundaryOld(1, velocX);
-	SetBoundaryOld(2, velocY);
+	}*/
+
+#pragma region Project2_Kernelized
+	// Create and set arguments for the corner kernel
+	cl::Kernel project2Kernel(program, "Project2");
+
+	//Remove this later once buffers have been hoisted
+	pBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p);
+	divBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div);
+
+	project2Kernel.setArg(0, velocXBuf);
+	project2Kernel.setArg(1, velocYBuf);
+	project2Kernel.setArg(2, pBuf);
+	project2Kernel.setArg(3, divBuf);
+	queue.enqueueNDRangeKernel(project2Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
+
+	
+#pragma endregion
+
+	SetBoundary(1, velocXBuf);
+	SetBoundary(2, velocYBuf);
+
+	// Read back results
+	queue.enqueueReadBuffer(velocXBuf, CL_TRUE, 0, size_t(N * N * 4), velocX);
+	queue.enqueueReadBuffer(velocYBuf, CL_TRUE, 0, size_t(N * N * 4), velocY);
 
 }
 

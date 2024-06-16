@@ -58,5 +58,6 @@ __kernel void Project2(__global float* velocX, __global float* velocY, __global 
 {
 	int i = get_global_id(0);
 	i = i + N + 1 + i / (N - 2) * 2; //Skip all perimeter cells
-	//TODO: implement this
+	velocX[i] -= 0.5f * (p[i+1] - p[i-1]) * N;
+	velocY[i] -= 0.5f * (p[i+N] - p[i-N]) * N;
 }
