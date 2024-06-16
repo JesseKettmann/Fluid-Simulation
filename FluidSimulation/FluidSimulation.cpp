@@ -85,6 +85,21 @@ bool FluidSimulation::OnUserUpdate(float fElapsedTime)
 	m_fluid->Update();
 
 	// Draw Fluid
+	int i = 0;
+	int limit = N * N - 3;
+
+	// SIMD section
+	for (; i < limit; i += 4) {
+
+	}
+
+	// Remaining entries
+	for (; i < N * N; i++) {
+
+	}
+
+
+	// Draw Fluid
 	for (int j = 0; j < N; ++j)
 	{
 		for (int i = 0; i < N; ++i)
