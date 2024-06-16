@@ -211,13 +211,14 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	project1Kernel.setArg(3, divBuf);
 	queue.enqueueNDRangeKernel(project1Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
+	SetBoundary(0, divBuf);
+	SetBoundary(0, pBuf);
+
 	// Read back results
 	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
 	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
 #pragma endregion
 
-	SetBoundaryOld(0, div);
-	SetBoundaryOld(0, p);
 	LinearSolve(0, p, div, 1, 4);
 
 
