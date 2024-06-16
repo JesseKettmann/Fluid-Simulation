@@ -80,7 +80,7 @@ public:
 	*	of the cells around the spot where it lands, then applies
 	*	that value to the current cell.
 	**/
-	void Advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt) noexcept;
+	void Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Buffer velocY, float dt) noexcept;
 
 private: // No stack over flow please OS!
 	 //std::array<float, N * N> s;

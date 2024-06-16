@@ -85,42 +85,26 @@ void Fluid::Update() noexcept
 	cl::Buffer Vx0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vx0.data());
 	cl::Buffer VyBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy.data());
 	cl::Buffer Vy0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy0.data());
-
-	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
-	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
-
-	Project(Vx0Buf, Vy0Buf, VxBuf, VyBuf);
-
-	// Read back results
-	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
-	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
-	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
-	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
-
-	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
-	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
-
-	queue.enqueueWriteBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
-	queue.enqueueWriteBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
-
-	Project(VxBuf, VyBuf, Vx0Buf, Vy0Buf);
-
-	// Read back results
-	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
-	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
-	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
-	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
-
-	// Create buffers and transfer data to device
 	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s);
 	cl::Buffer densityBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), density);
 
+	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
+	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
+	Project(Vx0Buf, Vy0Buf, VxBuf, VyBuf);
+	Advect(1, VxBuf, Vx0Buf, Vx0Buf, Vy0Buf, MOTION_SPEED);
+	Advect(2, VyBuf, Vy0Buf, Vx0Buf, Vy0Buf, MOTION_SPEED);
+	Project(VxBuf, VyBuf, Vx0Buf, Vy0Buf);
+
 	Diffuse(0, sBuf, densityBuf, DIFFUSION, MOTION_SPEED);
+	Advect(0, densityBuf, sBuf, VxBuf, VyBuf, MOTION_SPEED);
 
 	// Read back results
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 	queue.enqueueReadBuffer(sBuf, CL_TRUE, 0, size_t(N * N * 4), s);
-
-	Advect(0, density, s, Vx.data(), Vy.data(), MOTION_SPEED);
+	queue.enqueueReadBuffer(densityBuf, CL_TRUE, 0, size_t(N * N * 4), density);
 
 	queue.finish();
 }
