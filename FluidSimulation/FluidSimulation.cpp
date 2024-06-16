@@ -91,18 +91,12 @@ bool FluidSimulation::OnUserUpdate(float fElapsedTime)
 		{
 			const int x = i * SCALE;
 			const int y = j * SCALE;
-			
-			// Get Density 0 -> 255 alpha (background color)
-			float& density = m_fluid->density[IX(i, j)];
-			
-			//// Fix bug when color turn into black when adding too much density
-			//density = std::clamp(density, 0.0f, 255.0f);
 
 			// Apply Fluid velocity
 			m_fluid->AddVelocity(x, y, m_velocity_x * fElapsedTime, m_velocity_y * fElapsedTime);
 
 			// Construct color based on density alpha
-			m_fluid_color.a = static_cast<std::uint8_t>(density);
+			m_fluid_color.a = static_cast<std::uint8_t>(std::min(m_fluid->density[IX(i, j)], 255.0f));
 
 			// Draw pixel
 			FillRect(x, y, SCALE, SCALE, m_fluid_color);

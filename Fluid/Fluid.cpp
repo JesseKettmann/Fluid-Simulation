@@ -106,8 +106,6 @@ void Fluid::Update() noexcept
 	queue.enqueueReadBuffer(sBuf, CL_TRUE, 0, size_t(N * N * 4), s);
 	queue.enqueueReadBuffer(densityBuf, CL_TRUE, 0, size_t(N * N * 4), density);
 
-	ClampDensity(densityBuf);
-
 	queue.finish();
 }
 
@@ -293,16 +291,6 @@ void Fluid::Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Bu
 	queue.enqueueNDRangeKernel(advectKernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
 	SetBoundary(b, d);
-}
-
-void Fluid::ClampDensity(cl::Buffer x) noexcept
-{
-	// Create and set arguments for the clamp kernel
-	cl::Kernel clampKernel(program, "ClampDensity");
-
-	clampKernel.setArg(0, x);
-
-	queue.enqueueNDRangeKernel(clampKernel, cl::NullRange, cl::NDRange(N * N));
 }
 
 Fluid::~Fluid(){}

@@ -82,8 +82,6 @@ public:
 	**/
 	void Advect(int b, cl::Buffer d, cl::Buffer d0, cl::Buffer velocX, cl::Buffer velocY, float dt) noexcept;
 
-	void ClampDensity(cl::Buffer x) noexcept;
-
 private: // No stack over flow please OS!
 	 //std::array<float, N * N> s;
 	float s[N * N];
