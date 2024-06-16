@@ -89,10 +89,6 @@ void Fluid::Update() noexcept
 	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
 	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
 
-	// Read back results
-	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
-	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
-
 	Project(Vx0Buf, Vy0Buf, VxBuf, VyBuf);
 
 	// Read back results
