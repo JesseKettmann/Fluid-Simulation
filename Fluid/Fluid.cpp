@@ -53,6 +53,7 @@ Fluid::Fluid()
 	auto err = program.build();
 	if (err) cout << err << endl;
 	
+	queue = cl::CommandQueue(context, device);
 }
 
 void Fluid::Update() noexcept
@@ -78,8 +79,6 @@ void Fluid::Update() noexcept
 	//	cout << numbers[i] << endl;
 	//}
 	//cout << buf << endl;
-	
-	queue = cl::CommandQueue(context, device);
 
 	Diffuse(1, Vx0.data(), Vx.data(), VISCOSITY, MOTION_SPEED);
 	Diffuse(2, Vy0.data(), Vy.data(), VISCOSITY, MOTION_SPEED);
@@ -93,6 +92,8 @@ void Fluid::Update() noexcept
 
 	Diffuse(0, s, density, DIFFUSION, MOTION_SPEED);
 	Advect(0, density, s, Vx.data(), Vy.data(), MOTION_SPEED);
+
+	queue.finish();
 }
 
 void Fluid::AddDensity(int x, int y, float amount) noexcept
