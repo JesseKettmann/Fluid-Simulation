@@ -103,7 +103,13 @@ void Fluid::Update() noexcept
 	queue.enqueueWriteBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
 	queue.enqueueWriteBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
 
-	ProjectOld(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
+	Project(VxBuf, VyBuf, Vx0Buf, Vy0Buf);
+
+	// Read back results
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
 
 	// Create buffers and transfer data to device
 	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s);
