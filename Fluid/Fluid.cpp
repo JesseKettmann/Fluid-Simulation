@@ -111,34 +111,34 @@ void Fluid::AddVelocity(int x, int y, float amountX, float amountY) noexcept
 
 void Fluid::Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept
 {
-	const float a = dt * diff * (N - 2) * (N - 2);
-	LinearSolve(b, x, x0, a, 1 + SCALE * a);
-}
-
-void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
-{
 	// Create buffers and transfer data to device
 	cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x);
 	cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x0);
 	
+	const float a = dt * diff * (N - 2) * (N - 2);
+	LinearSolve(b, xBuf, x0Buf, a, 1 + SCALE * a);
+
+	// Read back results
+	queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
+}
+
+void Fluid::LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept
+{
 	const float cRecip = 1.0f / c;
 	for (int k = 0; k < ITERATIONS; k++)
 	{
 		// Create and set arguments for the linear solve kernel
 		cl::Kernel LinearSolveKernel(program, "LinearSolve");
-		LinearSolveKernel.setArg(0, xBuf);
-		LinearSolveKernel.setArg(1, x0Buf);
+		LinearSolveKernel.setArg(0, x);
+		LinearSolveKernel.setArg(1, x0);
 		LinearSolveKernel.setArg(2, sizeof(float), &a);
 		LinearSolveKernel.setArg(3, sizeof(float), &cRecip);
 
 		// Enqueue kernel
 		queue.enqueueNDRangeKernel(LinearSolveKernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
-		SetBoundary(b, xBuf);
+		SetBoundary(b, x);
 	}
-
-	// Read back results
-	queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
 }
 
 void Fluid::SetBoundaryOld(int b, float* x) noexcept
@@ -220,8 +220,10 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
 #pragma endregion
 
-	LinearSolve(0, p, div, 1, 4);
+	LinearSolve(0, pBuf, divBuf, 1, 4);
 
+	// Read back results
+	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
 
 	//--Original code--:
 	/*for (int j = 1; j < N - 1; j++) {

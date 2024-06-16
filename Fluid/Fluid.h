@@ -34,7 +34,7 @@ public:
 	*	four iterations are used. After each iteration, it resets the
 	*	boundaries so the calculations don't explode.
 	*/
-	void LinearSolve(int b, float* x, float* x0, float a, float c) noexcept;
+	void LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept;
 
 	/**
 	*	As noted above, this function sets the boundary cells at the outer edges of the this so they perfectly counteract their neighbors.
