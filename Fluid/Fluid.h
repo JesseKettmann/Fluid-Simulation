@@ -23,7 +23,7 @@ public:
 	*	So that means, while I know what it does, I don't really know how,
 	*	since all the work is in that mysterious function.
 	*/
-	void Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept;
+	void Diffuse(int b, cl::Buffer x, cl::Buffer x0, float diff, float dt) noexcept;
 
 	/**
 	*	this function is mysterious, but it does some kind of solving.
@@ -34,7 +34,7 @@ public:
 	*	four iterations are used. After each iteration, it resets the
 	*	boundaries so the calculations don't explode.
 	*/
-	void LinearSolve(int b, float* x, float* x0, float a, float c) noexcept;
+	void LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept;
 
 	/**
 	*	As noted above, this function sets the boundary cells at the outer edges of the this so they perfectly counteract their neighbors.
@@ -70,7 +70,7 @@ public:
 	*	but it does some more running through the data and setting values,
 	*	with some calls to LinearSolve thrown in for fun.
 	*/
-	void Project(float* velocX, float* velocY, float* p, float* div) noexcept;
+	void Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buffer div) noexcept;
 
 	/**
 	*	This function is responsible for actually moving things around.

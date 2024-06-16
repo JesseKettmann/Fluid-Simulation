@@ -53,6 +53,7 @@ Fluid::Fluid()
 	auto err = program.build();
 	if (err) cout << err << endl;
 	
+	queue = cl::CommandQueue(context, device);
 }
 
 void Fluid::Update() noexcept
@@ -78,21 +79,50 @@ void Fluid::Update() noexcept
 	//	cout << numbers[i] << endl;
 	//}
 	//cout << buf << endl;
-	
-	queue = cl::CommandQueue(context, device);
 
-	Diffuse(1, Vx0.data(), Vx.data(), VISCOSITY, MOTION_SPEED);
-	Diffuse(2, Vy0.data(), Vy.data(), VISCOSITY, MOTION_SPEED);
+	// Create buffers and transfer data to device
+	cl::Buffer VxBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vx.data());
+	cl::Buffer Vx0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vx0.data());
+	cl::Buffer VyBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy.data());
+	cl::Buffer Vy0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), Vy0.data());
 
-	Project(Vx0.data(), Vy0.data(), Vx.data(), Vy.data());
+	Diffuse(1, Vx0Buf, VxBuf, VISCOSITY, MOTION_SPEED);
+	Diffuse(2, Vy0Buf, VyBuf, VISCOSITY, MOTION_SPEED);
+
+	Project(Vx0Buf, Vy0Buf, VxBuf, VyBuf);
+
+	// Read back results
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
 
 	Advect(1, Vx.data(), Vx0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 	Advect(2, Vy.data(), Vy0.data(), Vx0.data(), Vy0.data(), MOTION_SPEED);
 
-	Project(Vx.data(), Vy.data(), Vx0.data(), Vy0.data());
+	queue.enqueueWriteBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueWriteBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
 
-	Diffuse(0, s, density, DIFFUSION, MOTION_SPEED);
+	Project(VxBuf, VyBuf, Vx0Buf, Vy0Buf);
+
+	// Read back results
+	queue.enqueueReadBuffer(VyBuf, CL_TRUE, 0, size_t(N * N * 4), Vy.data());
+	queue.enqueueReadBuffer(Vy0Buf, CL_TRUE, 0, size_t(N * N * 4), Vy0.data());
+	queue.enqueueReadBuffer(VxBuf, CL_TRUE, 0, size_t(N * N * 4), Vx.data());
+	queue.enqueueReadBuffer(Vx0Buf, CL_TRUE, 0, size_t(N * N * 4), Vx0.data());
+
+	// Create buffers and transfer data to device
+	cl::Buffer sBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), s);
+	cl::Buffer densityBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), density);
+
+	Diffuse(0, sBuf, densityBuf, DIFFUSION, MOTION_SPEED);
+
+	// Read back results
+	queue.enqueueReadBuffer(sBuf, CL_TRUE, 0, size_t(N * N * 4), s);
+
 	Advect(0, density, s, Vx.data(), Vy.data(), MOTION_SPEED);
+
+	queue.finish();
 }
 
 void Fluid::AddDensity(int x, int y, float amount) noexcept
@@ -108,36 +138,29 @@ void Fluid::AddVelocity(int x, int y, float amountX, float amountY) noexcept
 	this->Vy[index] += amountY;
 }
 
-void Fluid::Diffuse(int b, float* x, float* x0, float diff, float dt) noexcept
+void Fluid::Diffuse(int b, cl::Buffer x, cl::Buffer x0, float diff, float dt) noexcept
 {
 	const float a = dt * diff * (N - 2) * (N - 2);
 	LinearSolve(b, x, x0, a, 1 + SCALE * a);
 }
 
-void Fluid::LinearSolve(int b, float* x, float* x0, float a, float c) noexcept
+void Fluid::LinearSolve(int b, cl::Buffer x, cl::Buffer x0, float a, float c) noexcept
 {
-	// Create buffers and transfer data to device
-	cl::Buffer xBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x);
-	cl::Buffer x0Buf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), x0);
-	
 	const float cRecip = 1.0f / c;
 	for (int k = 0; k < ITERATIONS; k++)
 	{
 		// Create and set arguments for the linear solve kernel
 		cl::Kernel LinearSolveKernel(program, "LinearSolve");
-		LinearSolveKernel.setArg(0, xBuf);
-		LinearSolveKernel.setArg(1, x0Buf);
+		LinearSolveKernel.setArg(0, x);
+		LinearSolveKernel.setArg(1, x0);
 		LinearSolveKernel.setArg(2, sizeof(float), &a);
 		LinearSolveKernel.setArg(3, sizeof(float), &cRecip);
 
 		// Enqueue kernel
 		queue.enqueueNDRangeKernel(LinearSolveKernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
-		SetBoundary(b, xBuf);
+		SetBoundary(b, x);
 	}
-
-	// Read back results
-	queue.enqueueReadBuffer(xBuf, CL_TRUE, 0, size_t(N * N * 4), x);
 }
 
 void Fluid::SetBoundaryOld(int b, float* x) noexcept
@@ -180,47 +203,24 @@ void Fluid::SetBoundary(int b, cl::Buffer x) noexcept
 	queue.enqueueTask(cornerKernel);
 }
 
-void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
+void Fluid::Project(cl::Buffer velocX, cl::Buffer velocY, cl::Buffer p, cl::Buffer div) noexcept
 {
-	
-	/*for (int j = 1; j < N - 1; j++) {
-		for (int i = 1; i < N - 1; i++) {
-			div[IX(i, j)] = -0.5f * (
-				velocX[IX(i + 1, j)]
-				- velocX[IX(i - 1, j)]
-				+ velocY[IX(i, j + 1)]
-				- velocY[IX(i, j - 1)]
-				) / N;
-			p[IX(i, j)] = 0;
-		}
-	}*/
 
 #pragma region Project1_Kernelized
 	// Create and set arguments for the corner kernel
 	cl::Kernel project1Kernel(program, "Project1");
 
-	//Remove this later once buffers have been hoisted
-	cl::Buffer velocXBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocX);
-	cl::Buffer velocYBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), velocY);
-	cl::Buffer pBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p);
-	cl::Buffer divBuf(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div);
-
-	project1Kernel.setArg(0, velocXBuf);
-	project1Kernel.setArg(1, velocYBuf);
-	project1Kernel.setArg(2, pBuf);
-	project1Kernel.setArg(3, divBuf);
+	project1Kernel.setArg(0, velocX);
+	project1Kernel.setArg(1, velocY);
+	project1Kernel.setArg(2, p);
+	project1Kernel.setArg(3, div);
 	queue.enqueueNDRangeKernel(project1Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
-	SetBoundary(0, divBuf);
-	SetBoundary(0, pBuf);
-
-	// Read back results
-	queue.enqueueReadBuffer(pBuf, CL_TRUE, 0, size_t(N * N * 4), p);
-	queue.enqueueReadBuffer(divBuf, CL_TRUE, 0, size_t(N * N * 4), div);
+	SetBoundary(0, div);
+	SetBoundary(0, p);
 #pragma endregion
 
 	LinearSolve(0, p, div, 1, 4);
-
 
 	//--Original code--:
 	/*for (int j = 1; j < N - 1; j++) {
@@ -236,26 +236,17 @@ void Fluid::Project(float* velocX, float* velocY, float* p, float* div) noexcept
 	// Create and set arguments for the corner kernel
 	cl::Kernel project2Kernel(program, "Project2");
 
-	//Remove this later once buffers have been hoisted
-	pBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), p);
-	divBuf = cl::Buffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size_t(N * N * 4), div);
-
-	project2Kernel.setArg(0, velocXBuf);
-	project2Kernel.setArg(1, velocYBuf);
-	project2Kernel.setArg(2, pBuf);
-	project2Kernel.setArg(3, divBuf);
+	project2Kernel.setArg(0, velocX);
+	project2Kernel.setArg(1, velocY);
+	project2Kernel.setArg(2, p);
+	project2Kernel.setArg(3, div);
 	queue.enqueueNDRangeKernel(project2Kernel, cl::NullRange, cl::NDRange(N * N - (4 * N - 4)));
 
 	
 #pragma endregion
 
-	SetBoundary(1, velocXBuf);
-	SetBoundary(2, velocYBuf);
-
-	// Read back results
-	queue.enqueueReadBuffer(velocXBuf, CL_TRUE, 0, size_t(N * N * 4), velocX);
-	queue.enqueueReadBuffer(velocYBuf, CL_TRUE, 0, size_t(N * N * 4), velocY);
-
+	SetBoundary(1, velocX);
+	SetBoundary(2, velocY);
 }
 
 void Fluid::Advect(int b, float* d, float* d0, float* velocX, float* velocY, float dt) noexcept
