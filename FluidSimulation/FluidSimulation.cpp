@@ -110,11 +110,9 @@ bool FluidSimulation::OnUserUpdate(float fElapsedTime)
 		for (int j = 0; j < 4; ++j) {
 			int x = ((i + j) % N) * SCALE;
 			int y = ((i + j) / N) * SCALE;
-			int x_offset = x + j * SCALE;
-			int y_offset = y;
-			m_fluid->AddVelocity(x_offset, y_offset, m_velocity_x * fElapsedTime, m_velocity_y * fElapsedTime);
+			m_fluid->AddVelocity(x, y, m_velocity_x * fElapsedTime, m_velocity_y * fElapsedTime);
 			m_fluid_color.a = byte_array[j];
-			FillRect(x_offset, y_offset, SCALE, SCALE, m_fluid_color);
+			FillRect(x, y, SCALE, SCALE, m_fluid_color);
 		}
 	}
 
