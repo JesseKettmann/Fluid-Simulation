@@ -87,8 +87,6 @@ bool FluidSimulation::OnUserUpdate(float fElapsedTime)
 	// Draw Fluid
 	int i = 0;
 	int limit = N * N - 3;
-	const __m128 minVal = _mm_set1_ps(0.0f);
-	const __m128 maxVal = _mm_set1_ps(255.0f);
 
 	// SIMD section
 	for (; i < limit; i += 4) {

@@ -42,6 +42,6 @@ private:
 	olc::Pixel m_fluid_color;
 	float m_velocity_x;
 	float m_velocity_y;
-
-
+	const __m128 minVal = _mm_set1_ps(0.0f);
+	const __m128 maxVal = _mm_set1_ps(255.0f);
 };
